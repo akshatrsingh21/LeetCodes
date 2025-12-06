@@ -1,0 +1,45 @@
+class Solution {
+public:
+    static const int MOD = 1000000007;
+
+    int countPartitions(vector<int>& nums, int k) {
+        int n = nums.size();
+        vector<long long> dp(n + 1, 0), prefix(n + 1, 0);
+
+        dp[0] = 1;
+        prefix[0] = 1; // prefix[i] = dp[0] + dp[1] + ... + dp[i]
+
+        deque<int> maxQ, minQ;
+        int left = 0;
+
+        for (int right = 0; right < n; right++) {
+            // maintain max deque
+            while (!maxQ.empty() && nums[maxQ.back()] <= nums[right])
+                maxQ.pop_back();
+            maxQ.push_back(right);
+
+            // maintain min deque
+            while (!minQ.empty() && nums[minQ.back()] >= nums[right])
+                minQ.pop_back();
+            minQ.push_back(right);
+
+            // shrink left until window valid
+            while (nums[maxQ.front()] - nums[minQ.front()] > k) {
+                if (maxQ.front() == left) maxQ.pop_front();
+                if (minQ.front() == left) minQ.pop_front();
+                left++;
+            }
+
+            // dp[right+1] = sum(dp[left..right]) = prefix[right] - prefix[left-1]
+            long long ways = prefix[right];
+            if (left > 0) {
+                ways = (ways - prefix[left - 1] + MOD) % MOD;
+            }
+
+            dp[right + 1] = ways;
+            prefix[right + 1] = (prefix[right] + dp[right + 1]) % MOD;
+        }
+
+        return static_cast<int>(dp[n] % MOD);
+    }
+};
